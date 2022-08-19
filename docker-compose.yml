@@ -1,0 +1,70 @@
+version: "3"
+
+services:
+
+    web:
+      image: nginx:latest
+      volumes:
+          - ./:/var/www
+          - ./_docker/nginx/conf.d:/etc/nginx/conf.d
+      ports:
+          - "8098:80"
+      depends_on:
+          - app
+      container_name: web
+
+    app:
+        build:
+            context: .
+            dockerfile: _docker/app/Dockerfile
+        volumes:
+            - ./:/var/www
+        depends_on:
+            - db
+        container_name: app
+
+    db:
+        image: mysql:8.0
+        restart: unless-stopped
+        volumes:
+            - ./tmp/db:/var/lib/mysql
+        environment:
+            MYSQL_DATABASE: po_pivu
+            MYSQL_ROOT_PASSWORD: root
+        ports:
+            - 8101:3306
+        command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+        container_name: db
+
+    phpmyadmin:
+        image: phpmyadmin
+        restart: always
+        ports:
+          - "8118:80"
+        environment:
+          - PMA_ARBITRARY=1
+        container_name: pma
+
+#    composer:
+#        image: composer:latest
+#        container_name: composer
+#        volumes:
+#            - ./:/var/www
+#        working_dir: /var/www
+#        depends_on:
+#            - app
+
+#    npm:
+#        image: node:latest
+#        container_name: npm
+#        volumes:
+#            - ./node_modules:/var/www/node_modules
+#        working_dir: /var/www/
+#        entrypoint: [ 'npm', '--no-bin-links' ]
+
+#  composer:
+#    image: composer:2.3.10
+#    volumes:
+#      - ${APP_PATH_HOST}:${APP_PATH_CONTATINER}
+#    working_dir: ${APP_PATH_CONTATINER}
+#    command: composer install
